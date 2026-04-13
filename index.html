@@ -972,59 +972,15 @@
     const wordCount = text.split(/\s+/).length;
     document.getElementById('info-words').textContent = wordCount.toLocaleString();
 
-    const prompt = `You are an expert intelligence analyst and investigative journalist specializing in classified government documents. Read the following declassified document and extract the 8-10 most shocking, mind-blowing, disturbing, or historically significant revelations.
-
-For each finding, produce a Twitter/X-style post (max 280 characters) that captures the MOST jaw-dropping aspect. Make them punchy, impactful, bombshell revelations.
-
-Detect: source agency (CIA, FBI, NSA, DOD, etc.), approximate time period, and classify each finding's shock level as: CRITICAL, HIGH, or NOTABLE.
-Pick an appropriate emoji avatar for each account.
-
-RULES:
-- Be factual and grounded in the actual document text
-- If non-governmental text is provided, extract the most interesting points anyway
-- Write handle names like @CIA_Archive_1963, @FBIFile_COINTELPRO, @PentagonLeak etc.
-- Lead with the bombshell, not context
-- Highlight 1-3 key words per tweet by wrapping in <mark> tags
-
-Return ONLY valid JSON (no markdown, no backticks, no preamble):
-{
-  "source_agency": "CIA",
-  "time_period": "1963-1967",
-  "classification_level": "TOP SECRET",
-  "findings": [
-    {
-      "id": 1,
-      "handle": "@CIA_1963",
-      "avatar": "🕵️",
-      "tweet": "Tweet text with <mark>highlighted</mark> words",
-      "shock_level": "CRITICAL",
-      "timestamp": "declassified 2017"
-    }
-  ]
-}
-
-DOCUMENT:
----
-${text.substring(0, 12000)}
----`;
-
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 3000,
-          messages: [{ role: "user", content: prompt }]
-        })
+        body: JSON.stringify({ text })
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error.message);
-
-      const rawText = data.content[0].text.trim();
-      const clean = rawText.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
+      const parsed = await response.json();
+      if (parsed.error) throw new Error(parsed.error);
 
       currentFeedData = parsed;
       renderFeed(parsed);
