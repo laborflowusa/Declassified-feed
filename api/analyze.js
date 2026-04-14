@@ -1,26 +1,34 @@
-export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+exports.handler = async function(event, context) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  const { text } = req.body;
+  let text;
+  try {
+    const body = JSON.parse(event.body);
+    text = body.text || body.document || '';  // Support slight variations
+  } catch(e) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON in request body' }) };
+  }
 
   if (!text || text.length < 50) {
-    return res.status(400).json({ error: 'Document text too short' });
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Document text too short. Paste at least 50 characters.' }) };
   }
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API key not configured' });
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'GROQ_API_KEY environment variable not set in Netlify' }) };
   }
 
   const prompt = `You are an expert intelligence analyst and investigative journalist specializing in classified government documents. Read the following declassified document and extract the 8-10 most shocking, mind-blowing, disturbing, or historically significant revelations.
@@ -70,29 +78,48 @@ ${text.substring(0, 12000)}
         model: 'llama-3.3-70b-versatile',
         max_tokens: 3000,
         temperature: 0.7,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
+        messages: [{ role: 'user', content: prompt }]
       })
     });
 
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`Groq API error: ${response.status}`);
+    }
 
+    const data = await response.json();
     if (data.error) {
-      return res.status(500).json({ error: data.error.message });
+      throw new Error(data.error.message);
     }
 
     const rawText = data.choices[0].message.content.trim();
-    const clean = rawText.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
 
-    return res.status(200).json(parsed);
+    // Robust JSON cleaning - fixes most "gibberish" cases
+    let clean = rawText
+      .replace(/```json|```/g, '')
+      .replace(/^[\s\S]*?(\{[\s\S]*\})/, '$1')  // Extract first JSON object
+      .trim();
 
-  } catch (err) {
-    console.error('Groq API error:', err);
-    return res.status(500).json({ error: err.message });
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch (parseErr) {
+      // Extra fallback for malformed output
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('AI did not return valid JSON. Try a different document snippet.');
+      }
+    }
+
+    return { statusCode: 200, headers, body: JSON.stringify(parsed) };
+
+  } catch(err) {
+    console.error('Analysis error:', err);
+    return { 
+      statusCode: 500, 
+      headers, 
+      body: JSON.stringify({ error: err.message || 'Analysis failed. Check document text and try again.' }) 
+    };
   }
-}
+};
