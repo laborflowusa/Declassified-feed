@@ -6,60 +6,189 @@
   <title>DECLASSIFIED // Intelligence Feed</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    body { font-family: 'Share Tech Mono', monospace; background: #0a0a08; color: #ddd; margin: 0; padding: 0; }
-    .header { background: #111; padding: 10px; text-align: center; border-bottom: 2px solid #cc2222; }
-    .tabs { display: flex; background: #1a1a1a; }
-    .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; }
-    .tab.active { background: #cc2222; color: white; }
-    .container { max-width: 900px; margin: 20px auto; padding: 20px; }
-    textarea { width: 100%; height: 200px; background: #111; color: #ddd; border: 1px solid #444; padding: 10px; font-family: inherit; }
-    button { background: #cc2222; color: white; border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-    .card { background: #1a1a1a; border: 1px solid #444; padding: 15px; margin: 15px 0; border-radius: 4px; }
-    .error { color: #ff4444; background: #330000; padding: 10px; border: 1px solid #ff4444; }
-    mark { background: #ff0; color: #000; padding: 2px 4px; }
+    :root { --red: #cc2222; }
+    body { font-family: 'Share Tech Mono', monospace; background: #0a0a08; color: #ddd; margin:0; padding:0; }
+    .header { background:#111; padding:12px; text-align:center; border-bottom:3px solid var(--red); position:relative; }
+    .header h1 { margin:0; font-size:1.4rem; letter-spacing:2px; }
+    .tabs { display:flex; background:#1a1a1a; }
+    .tab { flex:1; padding:16px; text-align:center; cursor:pointer; font-size:1.1rem; }
+    .tab.active { background:var(--red); color:white; }
+    .container { max-width:960px; margin:20px auto; padding:0 15px; }
+    .drag-area { border:2px dashed #444; border-radius:8px; padding:40px; text-align:center; background:#111; cursor:pointer; }
+    textarea { width:100%; height:220px; background:#111; border:1px solid #444; color:#ddd; padding:15px; font-family:inherit; resize:vertical; }
+    button { background:var(--red); color:white; border:none; padding:12px 24px; cursor:pointer; font-size:1rem; }
+    button:hover { filter:brightness(1.1); }
+    .card { background:#1a1a1a; border:1px solid #444; padding:18px; margin:18px 0; border-radius:6px; position:relative; }
+    .card-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .tweet { line-height:1.6; font-size:1.05rem; }
+    mark { background:#ff0; color:#000; padding:2px 5px; border-radius:3px; }
+    .shock { font-size:0.9rem; padding:3px 10px; border-radius:9999px; }
+    .CRITICAL { background:#cc2222; color:white; }
+    .HIGH { background:#ff8800; color:white; }
+    .NOTABLE { background:#888; color:white; }
+    .error { background:#330000; color:#ff6666; padding:12px; border:1px solid #ff4444; border-radius:4px; }
+    .success { background:#003300; color:#66ff66; padding:12px; border-radius:4px; }
+    .install-banner { position:fixed; bottom:20px; left:20px; background:#111; border:2px solid var(--red); padding:15px 20px; border-radius:8px; box-shadow:0 4px 20px rgba(204,34,34,0.4); display:none; z-index:1000; }
   </style>
 </head>
 <body>
+
+  <!-- HEADER -->
   <div class="header">
     <h1>★ DECLASSIFIED INTELLIGENCE FEED ★</h1>
-    <p>● Online</p>
+    <p>AUTHORIZED PERSONNEL ONLY • AI-POWERED • CLEARANCE LEVEL: UNRESTRICTED</p>
+    <button onclick="installPWA()" style="position:absolute; top:15px; right:15px; background:#222; padding:8px 16px; font-size:0.9rem;">📲 Install App</button>
   </div>
 
+  <!-- TABS -->
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">⚡ Analyze</div>
     <div class="tab" onclick="switchTab(1)">📡 Feed</div>
     <div class="tab" onclick="switchTab(2)">📂 Saved</div>
+    <div class="tab" onclick="switchTab(3)">ℹ Sources</div>
   </div>
 
-  <div class="container" id="analyze-tab">
-    <h2>Raw Document Input</h2>
-    <textarea id="document-text" placeholder="Paste declassified document text here..."></textarea>
-    <button onclick="extractIntelligence()">⚡ Extract Intelligence</button>
-    <div id="status" style="margin-top: 10px;"></div>
+  <!-- ANALYZE TAB -->
+  <div class="container" id="tab-0">
+    <div class="drag-area" id="drop-zone">
+      📁 Drop Declassified Document<br>
+      <small>or click to browse (TXT works instantly • PDF = copy text for now)</small>
+      <input type="file" id="file-input" accept=".txt,.pdf" style="display:none;">
+    </div>
+
+    <h3 style="margin:20px 0 8px;">Or Paste Document Text</h3>
+    <textarea id="document-text" placeholder="Paste any declassified document text here..."></textarea>
+    <div style="margin-top:8px; font-size:0.9rem; color:#888;" id="word-count">0 words</div>
+
+    <button onclick="extractIntelligence()" style="width:100%; margin-top:15px; padding:16px; font-size:1.2rem;">
+      ⚡ Extract Intelligence
+    </button>
+
+    <div id="analyze-status" style="margin-top:15px; min-height:28px;"></div>
   </div>
 
-  <div class="container" id="feed-tab" style="display: none;">
-    <h2>Intelligence Feed</h2>
-    <div id="intelligence-feed">No active feed yet. Analyze a document first.</div>
+  <!-- FEED TAB -->
+  <div class="container" id="tab-1" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2>Intelligence Feed</h2>
+      <div>
+        <button onclick="saveCurrentFeed()">⊕ Save Feed</button>
+        <button onclick="copyAllToX()">Post All to X</button>
+      </div>
+    </div>
+    <div id="intelligence-feed"></div>
+  </div>
+
+  <!-- SAVED TAB -->
+  <div class="container" id="tab-2" style="display:none;">
+    <h2>Saved Intelligence Feeds</h2>
+    <button onclick="clearSavedFeeds()" style="background:#333; margin-bottom:15px;">Clear All Saved Feeds</button>
+    <div id="saved-feeds"></div>
+  </div>
+
+  <!-- SOURCES TAB -->
+  <div class="container" id="tab-3" style="display:none;">
+    <h2>Recommended Sources</h2>
+    <p>Visit these sites, open any document, copy the text, and paste above.</p>
+    <ul style="line-height:1.8;">
+      <li><strong>CIA Reading Room</strong> – MKUltra, UFOs, Cold War</li>
+      <li><strong>FBI Vault</strong> – JFK, MLK, COINTELPRO</li>
+      <li><strong>National Archives</strong> – Pentagon Papers, JFK files</li>
+      <li><strong>NSA FOIA</strong> – Surveillance docs</li>
+    </ul>
+    <p style="margin-top:30px; font-size:0.9rem; color:#666;">
+      All analysis is AI-generated from publicly declassified documents.<br>
+      DECLASSIFIED INTELLIGENCE FEED • v1.3
+    </p>
+  </div>
+
+  <!-- PWA INSTALL BANNER -->
+  <div id="install-banner" class="install-banner">
+    <strong>📲 Install Declassified Feed</strong><br>
+    Add to home screen for offline access & faster load times.
+    <button onclick="installPWA()" style="margin-left:15px;">Install Now</button>
+    <button onclick="dismissInstallBanner()" style="background:none; border:none; color:#888; margin-left:10px;">✕</button>
   </div>
 
   <script>
-    function switchTab(n) {
-      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
-      document.getElementById('analyze-tab').style.display = n===0 ? 'block' : 'none';
-      document.getElementById('feed-tab').style.display = n===1 ? 'block' : 'none';
+    let currentFeed = null;
+    let deferredPrompt = null;
+
+    // PWA Install
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').style.display = 'flex';
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else {
+        alert("Installation prompt not available right now.\n\nOn iOS: tap Share → 'Add to Home Screen'\nOn Android/Desktop: look for install icon in address bar.");
+      }
+      dismissInstallBanner();
     }
 
+    function dismissInstallBanner() {
+      document.getElementById('install-banner').style.display = 'none';
+    }
+
+    // Tab switching
+    function switchTab(n) {
+      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+      document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
+      document.getElementById('tab-'+n).style.display = 'block';
+      if (n===2) loadSavedFeeds();
+    }
+
+    // File drag & drop
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#cc2222'; });
+    dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = '#444');
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#444';
+      handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+    function handleFile(file) {
+      if (!file) return;
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        alert("✅ PDF detected!\n\nFor best results right now:\n1. Open the PDF\n2. Select All (Ctrl+A)\n3. Copy\n4. Paste the text in the box below\n\nFull direct PDF reading is planned for a future update.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('document-text').value = ev.target.result;
+        updateWordCount();
+      };
+      reader.readAsText(file);
+    }
+
+    // Word count
+    const textarea = document.getElementById('document-text');
+    textarea.addEventListener('input', updateWordCount);
+    function updateWordCount() {
+      const words = textarea.value.trim().split(/\s+/).length;
+      document.getElementById('word-count').textContent = `${words} words`;
+    }
+
+    // Main analysis
     async function extractIntelligence() {
-      const text = document.getElementById('document-text').value.trim();
-      const statusEl = document.getElementById('status');
-      
+      const text = textarea.value.trim();
+      const status = document.getElementById('analyze-status');
+
       if (!text || text.length < 50) {
-        statusEl.innerHTML = '<div class="error">❌ Please paste at least 50 characters of document text.</div>';
+        status.innerHTML = `<div class="error">❌ Please paste at least 50 characters of document text.</div>`;
         return;
       }
 
-      statusEl.innerHTML = '<p>🔍 Analyzing with Groq Llama 3.3 70B... (this may take 10-30 seconds)</p>';
+      status.innerHTML = `<div style="color:#cc2222;">🔍 Analyzing with Groq Llama 3.3 70B... (10–30 seconds)</div>`;
 
       try {
         const res = await fetch('/api/analyze', {
@@ -68,59 +197,106 @@
           body: JSON.stringify({ text: text })
         });
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = await res.json();
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
+        if (data.error) throw new Error(data.error);
 
-        // Render the feed
+        currentFeed = data;
         renderFeed(data);
-        statusEl.innerHTML = '<p style="color:#22cc22;">✅ Analysis complete!</p>';
-        switchTab(1); // Switch to Feed tab
+        status.innerHTML = `<div class="success">✅ Analysis complete! Switched to Feed tab.</div>`;
+        switchTab(1);
 
       } catch (err) {
         console.error(err);
-        statusEl.innerHTML = `<div class="error">❌ Error: ${err.message}</div>`;
+        status.innerHTML = `<div class="error">❌ ${err.message}</div>`;
       }
     }
 
     function renderFeed(data) {
       const container = document.getElementById('intelligence-feed');
       let html = `
-        <div style="margin-bottom:15px;">
-          <strong>Source:</strong> ${data.source_agency || 'Unknown'} | 
-          <strong>Period:</strong> ${data.time_period || 'Unknown'} | 
+        <div style="margin-bottom:15px; padding:10px; background:#111; border-radius:4px;">
+          <strong>Source:</strong> ${data.source_agency || 'Unknown'} &nbsp;&nbsp;
+          <strong>Period:</strong> ${data.time_period || 'Unknown'} &nbsp;&nbsp;
           <strong>Level:</strong> ${data.classification_level || 'Unknown'}
         </div>`;
 
-      if (data.findings && data.findings.length) {
-        data.findings.forEach(f => {
-          html += `
-            <div class="card">
-              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                <span style="font-size:24px;">${f.avatar || '🔍'}</span>
-                <strong>${f.handle || '@Unknown'}</strong>
-              </div>
-              <div style="line-height:1.5;">${f.tweet || f.text || ''}</div>
-              <div style="margin-top:10px; font-size:0.9em; color:#888;">
-                Shock Level: <strong style="color:#ff4444;">${f.shock_level || 'NOTABLE'}</strong> 
-                • ${f.timestamp || 'Recently declassified'}
-              </div>
-            </div>`;
-        });
-      } else {
-        html += '<p>No findings returned.</p>';
-      }
+      data.findings.forEach(f => {
+        html += `
+          <div class="card">
+            <div class="card-header">
+              <span style="font-size:28px;">${f.avatar || '🔍'}</span>
+              <strong>${f.handle || '@Unknown'}</strong>
+            </div>
+            <div class="tweet">${f.tweet || ''}</div>
+            <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+              <span class="shock ${f.shock_level}">${f.shock_level}</span>
+              <span style="font-size:0.85rem; color:#888;">${f.timestamp || 'Recently declassified'}</span>
+              <button onclick="postCardToX(this)" style="background:#1d9bf0; padding:4px 12px; font-size:0.85rem;">Post to X</button>
+            </div>
+          </div>`;
+      });
 
       container.innerHTML = html;
     }
 
-    // Default to Analyze tab
+    function postCardToX(btn) {
+      const card = btn.closest('.card');
+      const tweetText = card.querySelector('.tweet').innerText;
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+      window.open(url, '_blank');
+    }
+
+    function copyAllToX() {
+      if (!currentFeed) return alert("No feed to share yet.");
+      let allText = currentFeed.findings.map(f => f.tweet).join('\n\n');
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(allText)}`;
+      window.open(url, '_blank');
+    }
+
+    // Save current feed
+    function saveCurrentFeed() {
+      if (!currentFeed) return alert("Nothing to save yet.");
+      let saved = JSON.parse(localStorage.getItem('savedFeeds') || '[]');
+      saved.unshift({ timestamp: new Date().toISOString(), data: currentFeed });
+      if (saved.length > 20) saved.pop();
+      localStorage.setItem('savedFeeds', JSON.stringify(saved));
+      alert("✅ Feed saved! Go to Saved tab to view.");
+    }
+
+    function loadSavedFeeds() {
+      const container = document.getElementById('saved-feeds');
+      let saved = JSON.parse(localStorage.getItem('savedFeeds') || '[]');
+      if (saved.length === 0) {
+        container.innerHTML = '<p>No saved feeds yet. Analyze something and hit "Save Feed".</p>';
+        return;
+      }
+      let html = '';
+      saved.forEach((item, i) => {
+        html += `<div style="margin-bottom:20px; padding:15px; background:#111; border-radius:6px;">
+          <small>${new Date(item.timestamp).toLocaleString()}</small>
+          <div onclick="viewSavedFeed(${i})" style="cursor:pointer; margin-top:8px;">${item.data.findings[0].tweet.substring(0,120)}...</div>
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function viewSavedFeed(i) {
+      let saved = JSON.parse(localStorage.getItem('savedFeeds') || '[]');
+      currentFeed = saved[i].data;
+      renderFeed(currentFeed);
+      switchTab(1);
+    }
+
+    function clearSavedFeeds() {
+      if (confirm("Delete ALL saved feeds?")) {
+        localStorage.removeItem('savedFeeds');
+        loadSavedFeeds();
+      }
+    }
+
+    // Start on Analyze tab
     switchTab(0);
   </script>
 </body>
