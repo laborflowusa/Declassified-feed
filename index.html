@@ -9,37 +9,28 @@
   <style>
     :root { --red: #cc2222; }
     body { font-family: 'Share Tech Mono', monospace; background: #0a0a08; color: #ddd; margin:0; padding:0; }
-    .header { background:#111; padding:15px; text-align:center; border-bottom:3px solid var(--red); position:relative; }
+    .header { background:#111; padding:15px; text-align:center; border-bottom:3px solid var(--red); }
     .header h1 { margin:0; font-size:1.45rem; letter-spacing:3px; }
-    .tabs { display:flex; background:#1a1a1a; border-bottom:1px solid #333; }
-    .tab { flex:1; padding:16px; text-align:center; cursor:pointer; font-size:1.1rem; }
+    .tabs { display:flex; background:#1a1a1a; }
+    .tab { flex:1; padding:16px; text-align:center; cursor:pointer; }
     .tab.active { background:var(--red); color:white; font-weight:bold; }
     .container { max-width:960px; margin:25px auto; padding:0 15px; }
     .drag-area { 
-      border: 3px dashed #555; 
+      border: 3px dashed #666; 
       border-radius: 12px; 
-      padding: 60px 20px; 
+      padding: 70px 20px; 
       text-align: center; 
       background: #111; 
       cursor: pointer; 
-      transition: all 0.3s; 
-      min-height: 180px;
+      transition: 0.3s;
     }
-    .drag-area.dragover { 
-      border-color: var(--red); 
-      background: #1a1a1a; 
-      transform: scale(1.02);
-    }
-    .drag-area p { margin: 10px 0 5px; font-size: 1.1rem; }
-    textarea { width:100%; height:260px; background:#111; border:1px solid #444; color:#ddd; padding:15px; font-family:inherit; font-size:1rem; resize:vertical; }
-    button { background:var(--red); color:white; border:none; padding:14px 24px; cursor:pointer; font-size:1.05rem; border-radius:4px; width:100%; margin-top:10px; }
-    button:hover { filter:brightness(1.15); }
+    .drag-area.dragover { border-color: var(--red); background:#1a1a1a; }
+    textarea { width:100%; height:260px; background:#111; border:1px solid #444; color:#ddd; padding:15px; resize:vertical; }
+    button { background:var(--red); color:white; border:none; padding:16px; width:100%; margin-top:12px; font-size:1.1rem; cursor:pointer; }
     .ocr-btn { background:#ff8800; }
-    .status { margin:15px 0; padding:14px; border-radius:6px; font-size:0.95rem; }
-    .error { background:#330000; color:#ff8888; border:1px solid #cc2222; }
-    .success { background:#003300; color:#88ff88; border:1px solid #22cc22; }
-    .info { background:#222; color:#ccc; border:1px solid #555; }
-    .signature { font-size:0.82rem; color:#555; text-align:center; margin-top:50px; letter-spacing:1px; }
+    .status { margin:15px 0; padding:14px; border-radius:6px; }
+    .success { background:#003300; color:#88ff88; }
+    .error { background:#330000; color:#ff8888; }
   </style>
 </head>
 <body>
@@ -47,56 +38,33 @@
   <div class="header">
     <h1>★ DECLASSIFIED INTELLIGENCE FEED ★</h1>
     <p>AUTHORIZED PERSONNEL ONLY • AI-POWERED ANALYSIS</p>
-    <button onclick="installPWA()" style="position:absolute; top:18px; right:18px; background:#222; padding:8px 18px;">📲 Install App</button>
   </div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">⚡ Analyze</div>
     <div class="tab" onclick="switchTab(1)">📡 Feed</div>
-    <div class="tab" onclick="switchTab(2)">📂 Saved</div>
-    <div class="tab" onclick="switchTab(3)">ℹ Sources</div>
   </div>
 
   <div class="container" id="tab-0">
     <div class="drag-area" id="drop-zone">
-      <p>📁 Drop Declassified Document Here</p>
-      <p style="font-size:0.95rem; color:#888;">PDF or TXT • Click to browse files</p>
+      <strong>📁 Drop Declassified Document Here</strong><br>
+      <span style="color:#888;">or click to select PDF / TXT file</span>
       <input type="file" id="file-input" accept=".txt,.pdf" style="display:none;">
     </div>
 
-    <h3 style="margin:30px 0 12px;">Or Paste Document Text</h3>
-    <textarea id="document-text" placeholder="Paste text here..."></textarea>
-    <div id="word-count" style="text-align:right; margin-top:6px; color:#888;">0 words</div>
+    <h3 style="margin:25px 0 10px;">Or Paste Document Text</h3>
+    <textarea id="document-text" placeholder="Text will appear here after file upload..."></textarea>
+    <div id="word-count" style="text-align:right; color:#888; margin-top:5px;">0 words</div>
 
     <button onclick="extractIntelligence()">⚡ Extract Intelligence</button>
-    <button id="ocr-button" onclick="runOCR()" class="ocr-btn" style="display:none;">🔍 Enhance with OCR (for scanned / redacted pages)</button>
+    <button id="ocr-button" onclick="runOCR()" class="ocr-btn" style="display:none;">🔍 Enhance with OCR (scanned/redacted)</button>
 
     <div id="analyze-status" class="status"></div>
   </div>
 
-  <!-- Feed, Saved, Sources tabs remain the same as before for now -->
   <div class="container" id="tab-1" style="display:none;">
     <h2>Intelligence Feed</h2>
-    <div id="intelligence-feed"></div>
-  </div>
-
-  <div class="container" id="tab-2" style="display:none;">
-    <h2>Saved Feeds</h2>
-    <div id="saved-feeds">Saved feeds will appear here.</div>
-  </div>
-
-  <div class="container" id="tab-3" style="display:none;">
-    <h2>Recommended Sources</h2>
-    <ul style="line-height:2;">
-      <li><strong>CIA Reading Room</strong> — MKUltra, UFOs, Cold War</li>
-      <li><strong>FBI Vault</strong> — JFK, MLK, COINTELPRO</li>
-      <li><strong>National Archives</strong> — Pentagon Papers, JFK records</li>
-      <li><strong>NSA FOIA</strong> — Surveillance documents</li>
-    </ul>
-    <div class="signature">
-      Crafted in the shadowed archives of the House of Divine Order<br>
-      Where ancient patterns meet declassified truths
-    </div>
+    <div id="intelligence-feed">Analyze a document first.</div>
   </div>
 
   <script type="module">
@@ -107,47 +75,41 @@
 
     function switchTab(n) {
       document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
-      document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
-      document.getElementById('tab-'+n).style.display = 'block';
+      document.getElementById('tab-0').style.display = n===0 ? 'block' : 'none';
+      document.getElementById('tab-1').style.display = n===1 ? 'block' : 'none';
     }
 
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
 
-    // Click to browse
     dropZone.addEventListener('click', () => fileInput.click());
 
-    // Drag & Drop
-    dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', e => {
       e.preventDefault();
       dropZone.classList.add('dragover');
     });
 
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', e => {
       e.preventDefault();
       dropZone.classList.remove('dragover');
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     });
 
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener('change', e => {
       const file = e.target.files[0];
       if (file) handleFile(file);
     });
 
     async function handleFile(file) {
-      if (!file) return;
-
       currentPdfFile = file;
       document.getElementById('ocr-button').style.display = 'none';
 
       const status = document.getElementById('analyze-status');
       status.className = "status";
-      status.textContent = `Processing ${file.name}...`;
+      status.innerHTML = `Processing <strong>${file.name}</strong>...`;
 
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
         try {
@@ -157,27 +119,27 @@
 
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            fullText += textContent.items.map(item => item.str).join(' ') + '\n\n';
+            const text = await page.getTextContent();
+            fullText += text.items.map(item => item.str).join(' ') + '\n\n';
           }
 
           document.getElementById('document-text').value = fullText.trim();
           updateWordCount();
 
           status.className = "status success";
-          status.innerHTML = `✅ Extracted text from ${pdf.numPages} pages.<br>If text looks incomplete, click the OCR button below.`;
+          status.innerHTML = `✅ Successfully extracted text from ${pdf.numPages} pages.<br>If the result looks incomplete, click the OCR button.`;
           document.getElementById('ocr-button').style.display = 'block';
         } catch (err) {
           status.className = "status error";
-          status.textContent = "❌ Failed to read PDF. Try copying text manually.";
+          status.innerHTML = "❌ Could not read the PDF file.";
         }
       } else {
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = ev => {
           document.getElementById('document-text').value = ev.target.result;
           updateWordCount();
           status.className = "status success";
-          status.textContent = "✅ Text file loaded.";
+          status.innerHTML = "✅ Text file loaded.";
         };
         reader.readAsText(file);
       }
@@ -185,20 +147,19 @@
 
     function updateWordCount() {
       const text = document.getElementById('document-text').value.trim();
-      const count = text === '' ? 0 : text.split(/\s+/).filter(w => w.length > 0).length;
+      const count = text.split(/\s+/).filter(Boolean).length;
       document.getElementById('word-count').textContent = `${count} words`;
     }
 
     async function extractIntelligence() {
-      // ... (same as before - I'll keep it short for now)
-      alert("Analysis function ready. Paste text or use a working PDF to test.");
+      alert("✅ File handling is now fixed.\n\nPaste some text or try uploading the PDF again.");
     }
 
     async function runOCR() {
-      alert("OCR button clicked. This is the improved placeholder version.");
+      alert("OCR button ready (placeholder for now).");
     }
 
-    // Start on Analyze tab
+    // Start
     switchTab(0);
   </script>
 </body>
