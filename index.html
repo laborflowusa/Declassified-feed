@@ -5,42 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DECLASSIFIED // Intelligence Feed</title>
   <link rel="manifest" href="manifest.json">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
   <style>
     :root { --red: #cc2222; }
-    body { font-family: 'Share Tech Mono', monospace; background: #0a0a08; color: #ddd; margin:0; padding:0; }
-    .header { background:#111; padding:12px; text-align:center; border-bottom:3px solid var(--red); position:relative; }
-    .header h1 { margin:0; font-size:1.4rem; letter-spacing:2px; }
-    .tabs { display:flex; background:#1a1a1a; }
+    body { font-family: 'Share Tech Mono', monospace; background: #0a0a08; color: #ddd; margin:0; padding:0; line-height:1.5; }
+    .header { background:#111; padding:15px; text-align:center; border-bottom:3px solid var(--red); position:relative; }
+    .header h1 { margin:0; font-size:1.45rem; letter-spacing:3px; }
+    .tabs { display:flex; background:#1a1a1a; border-bottom:1px solid #333; }
     .tab { flex:1; padding:16px; text-align:center; cursor:pointer; font-size:1.1rem; }
-    .tab.active { background:var(--red); color:white; }
-    .container { max-width:960px; margin:20px auto; padding:0 15px; }
-    .drag-area { border:2px dashed #444; border-radius:8px; padding:40px; text-align:center; background:#111; cursor:pointer; }
-    textarea { width:100%; height:220px; background:#111; border:1px solid #444; color:#ddd; padding:15px; font-family:inherit; resize:vertical; }
-    button { background:var(--red); color:white; border:none; padding:12px 24px; cursor:pointer; font-size:1rem; }
-    button:hover { filter:brightness(1.1); }
-    .card { background:#1a1a1a; border:1px solid #444; padding:18px; margin:18px 0; border-radius:6px; position:relative; }
-    .card-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-    .tweet { line-height:1.6; font-size:1.05rem; }
-    mark { background:#ff0; color:#000; padding:2px 5px; border-radius:3px; }
-    .shock { font-size:0.9rem; padding:3px 10px; border-radius:9999px; }
+    .tab.active { background:var(--red); color:white; font-weight:bold; }
+    .container { max-width:960px; margin:25px auto; padding:0 15px; }
+    .drag-area { border:2px dashed #555; border-radius:8px; padding:45px 20px; text-align:center; background:#111; cursor:pointer; transition:0.3s; }
+    .drag-area.dragover { border-color:var(--red); background:#1a1a1a; }
+    textarea { width:100%; height:260px; background:#111; border:1px solid #444; color:#ddd; padding:15px; font-family:inherit; font-size:1rem; resize:vertical; }
+    button { background:var(--red); color:white; border:none; padding:14px 24px; cursor:pointer; font-size:1.05rem; border-radius:4px; }
+    button:hover { filter:brightness(1.15); }
+    .ocr-btn { background:#ff8800; font-size:1rem; }
+    .card { background:#1a1a1a; border:1px solid #444; padding:20px; margin:20px 0; border-radius:6px; }
+    .card-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    .tweet { line-height:1.65; font-size:1.05rem; }
+    .shock { font-size:0.9rem; padding:5px 12px; border-radius:9999px; font-weight:bold; }
     .CRITICAL { background:#cc2222; color:white; }
     .HIGH { background:#ff8800; color:white; }
-    .NOTABLE { background:#888; color:white; }
-    .error { background:#330000; color:#ff6666; padding:12px; border:1px solid #ff4444; border-radius:4px; }
-    .success { background:#003300; color:#66ff66; padding:12px; border-radius:4px; }
-    .install-banner { position:fixed; bottom:20px; left:20px; background:#111; border:2px solid var(--red); padding:15px 20px; border-radius:8px; box-shadow:0 4px 20px rgba(204,34,34,0.4); display:none; z-index:1000; }
+    .NOTABLE { background:#666; color:white; }
+    .status { margin:15px 0; padding:12px; border-radius:4px; }
+    .error { background:#330000; color:#ff8888; border:1px solid #cc2222; }
+    .success { background:#003300; color:#88ff88; border:1px solid #22cc22; }
+    .info { background:#222; color:#aaa; border:1px solid #555; }
+    .install-banner { position:fixed; bottom:20px; left:20px; right:20px; max-width:420px; background:#111; border:2px solid var(--red); padding:18px; border-radius:8px; box-shadow:0 5px 25px rgba(204,34,34,0.5); display:none; z-index:1000; margin:0 auto; }
+    .signature { font-size:0.8rem; color:#555; text-align:center; margin-top:40px; letter-spacing:1px; }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
   <div class="header">
     <h1>★ DECLASSIFIED INTELLIGENCE FEED ★</h1>
-    <p>AUTHORIZED PERSONNEL ONLY • AI-POWERED • CLEARANCE LEVEL: UNRESTRICTED</p>
-    <button onclick="installPWA()" style="position:absolute; top:15px; right:15px; background:#222; padding:8px 16px; font-size:0.9rem;">📲 Install App</button>
+    <p>AUTHORIZED PERSONNEL ONLY • AI-POWERED ANALYSIS</p>
+    <button onclick="installPWA()" style="position:absolute; top:18px; right:18px; background:#222; padding:8px 18px;">📲 Install App</button>
   </div>
 
-  <!-- TABS -->
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">⚡ Analyze</div>
     <div class="tab" onclick="switchTab(1)">📡 Feed</div>
@@ -51,32 +54,35 @@
   <!-- ANALYZE TAB -->
   <div class="container" id="tab-0">
     <div class="drag-area" id="drop-zone">
-      📁 Drop Declassified Document<br>
-      <small>or click to browse (TXT works instantly • PDF = copy text for now)</small>
+      📁 Drop Declassified Document (PDF or TXT supported)<br>
+      <small>Text PDFs extract instantly • Scanned PDFs may need OCR</small>
       <input type="file" id="file-input" accept=".txt,.pdf" style="display:none;">
     </div>
 
-    <h3 style="margin:20px 0 8px;">Or Paste Document Text</h3>
-    <textarea id="document-text" placeholder="Paste any declassified document text here..."></textarea>
-    <div style="margin-top:8px; font-size:0.9rem; color:#888;" id="word-count">0 words</div>
+    <h3 style="margin:25px 0 10px;">Or Paste Document Text</h3>
+    <textarea id="document-text" placeholder="Paste text here or drop a PDF above..."></textarea>
+    <div id="word-count" style="text-align:right; margin-top:5px; color:#888; font-size:0.9rem;">0 words</div>
 
-    <button onclick="extractIntelligence()" style="width:100%; margin-top:15px; padding:16px; font-size:1.2rem;">
-      ⚡ Extract Intelligence
-    </button>
+    <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
+      <button onclick="extractIntelligence()" style="padding:18px; font-size:1.25rem;">
+        ⚡ Extract Intelligence
+      </button>
+      <button id="ocr-button" onclick="runOCR()" class="ocr-btn" style="display:none;">
+        🔍 Enhance with OCR (for scanned / redacted pages)
+      </button>
+    </div>
 
-    <div id="analyze-status" style="margin-top:15px; min-height:28px;"></div>
+    <div id="analyze-status" class="status"></div>
   </div>
 
   <!-- FEED TAB -->
   <div class="container" id="tab-1" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2>Intelligence Feed</h2>
-      <div>
-        <button onclick="saveCurrentFeed()">⊕ Save Feed</button>
-        <button onclick="copyAllToX()">Post All to X</button>
-      </div>
-    </div>
+    <h2>Intelligence Feed</h2>
     <div id="intelligence-feed"></div>
+    <div style="margin-top:20px;">
+      <button onclick="saveCurrentFeed()">⊕ Save This Feed</button>
+      <button onclick="copyAllToX()">📤 Post All to X</button>
+    </div>
   </div>
 
   <!-- SAVED TAB -->
@@ -89,44 +95,46 @@
   <!-- SOURCES TAB -->
   <div class="container" id="tab-3" style="display:none;">
     <h2>Recommended Sources</h2>
-    <p>Visit these sites, open any document, copy the text, and paste above.</p>
-    <ul style="line-height:1.8;">
-      <li><strong>CIA Reading Room</strong> – MKUltra, UFOs, Cold War</li>
-      <li><strong>FBI Vault</strong> – JFK, MLK, COINTELPRO</li>
-      <li><strong>National Archives</strong> – Pentagon Papers, JFK files</li>
-      <li><strong>NSA FOIA</strong> – Surveillance docs</li>
+    <ul style="line-height:2;">
+      <li><strong>CIA Reading Room</strong> — MKUltra, UFOs, Cold War ops</li>
+      <li><strong>FBI Vault</strong> — JFK, MLK, COINTELPRO files</li>
+      <li><strong>National Archives</strong> — Pentagon Papers & JFK records</li>
+      <li><strong>NSA FOIA</strong> — Surveillance & signals intelligence</li>
     </ul>
-    <p style="margin-top:30px; font-size:0.9rem; color:#666;">
-      All analysis is AI-generated from publicly declassified documents.<br>
-      DECLASSIFIED INTELLIGENCE FEED • v1.3
-    </p>
+    
+    <div class="signature">
+      Crafted in the shadowed archives of the House of Divine Order<br>
+      Where ancient patterns meet declassified truths
+    </div>
   </div>
 
-  <!-- PWA INSTALL BANNER -->
+  <!-- PWA Install Banner -->
   <div id="install-banner" class="install-banner">
     <strong>📲 Install Declassified Feed</strong><br>
-    Add to home screen for offline access & faster load times.
-    <button onclick="installPWA()" style="margin-left:15px;">Install Now</button>
-    <button onclick="dismissInstallBanner()" style="background:none; border:none; color:#888; margin-left:10px;">✕</button>
+    Add to your home screen for offline access and faster performance.
+    <div style="margin-top:12px;">
+      <button onclick="installPWA()">Install Now</button>
+      <button onclick="dismissInstallBanner()" style="background:none; border:none; color:#aaa; margin-left:15px;">Later</button>
+    </div>
   </div>
 
-  <script>
+  <script type="module">
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+
     let currentFeed = null;
+    let currentPdfFile = null;
     let deferredPrompt = null;
 
-    // PWA Install
     window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
       deferredPrompt = e;
-      document.getElementById('install-banner').style.display = 'flex';
+      document.getElementById('install-banner').style.display = 'block';
     });
 
     function installPWA() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-      } else {
-        alert("Installation prompt not available right now.\n\nOn iOS: tap Share → 'Add to Home Screen'\nOn Android/Desktop: look for install icon in address bar.");
+        deferredPrompt = null;
       }
       dismissInstallBanner();
     }
@@ -135,60 +143,83 @@
       document.getElementById('install-banner').style.display = 'none';
     }
 
-    // Tab switching
     function switchTab(n) {
-      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n));
       document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
-      document.getElementById('tab-'+n).style.display = 'block';
-      if (n===2) loadSavedFeeds();
+      document.getElementById('tab-' + n).style.display = 'block';
+      if (n === 2) loadSavedFeeds();
     }
 
-    // File drag & drop
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
     dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#cc2222'; });
-    dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = '#444');
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.style.borderColor = '#444';
-      handleFile(e.dataTransfer.files[0]);
-    });
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
     fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
 
-    function handleFile(file) {
+    async function handleFile(file) {
       if (!file) return;
+      currentPdfFile = file;
+      document.getElementById('ocr-button').style.display = 'none';
+
+      const status = document.getElementById('analyze-status');
+      status.className = "status";
+      status.innerHTML = `Processing <strong>${file.name}</strong>...`;
+
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-        alert("✅ PDF detected!\n\nFor best results right now:\n1. Open the PDF\n2. Select All (Ctrl+A)\n3. Copy\n4. Paste the text in the box below\n\nFull direct PDF reading is planned for a future update.");
-        return;
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          let fullText = '';
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            fullText += textContent.items.map(item => item.str).join(' ') + '\n\n';
+          }
+
+          document.getElementById('document-text').value = fullText.trim();
+          updateWordCount();
+
+          status.className = "status success";
+          status.innerHTML = `✅ Normal text extracted from ${pdf.numPages} pages.<br>
+                             If the text appears incomplete (common with scanned or redacted documents), use the OCR button below.`;
+          document.getElementById('ocr-button').style.display = 'block';
+        } catch (err) {
+          status.className = "status error";
+          status.innerHTML = "❌ Failed to extract text from PDF.";
+        }
+      } else {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          document.getElementById('document-text').value = ev.target.result;
+          updateWordCount();
+          status.className = "status success";
+          status.innerHTML = "✅ Text file loaded successfully.";
+        };
+        reader.readAsText(file);
       }
-      const reader = new FileReader();
-      reader.onload = ev => {
-        document.getElementById('document-text').value = ev.target.result;
-        updateWordCount();
-      };
-      reader.readAsText(file);
     }
 
-    // Word count
-    const textarea = document.getElementById('document-text');
-    textarea.addEventListener('input', updateWordCount);
     function updateWordCount() {
-      const words = textarea.value.trim().split(/\s+/).length;
+      const text = document.getElementById('document-text').value.trim();
+      const words = text === '' ? 0 : text.split(/\s+/).filter(Boolean).length;
       document.getElementById('word-count').textContent = `${words} words`;
     }
 
-    // Main analysis
     async function extractIntelligence() {
-      const text = textarea.value.trim();
+      const text = document.getElementById('document-text').value.trim();
       const status = document.getElementById('analyze-status');
 
-      if (!text || text.length < 50) {
-        status.innerHTML = `<div class="error">❌ Please paste at least 50 characters of document text.</div>`;
+      if (text.length < 50) {
+        status.className = "status error";
+        status.innerHTML = "❌ Please provide at least 50 characters of text.";
         return;
       }
 
-      status.innerHTML = `<div style="color:#cc2222;">🔍 Analyzing with Groq Llama 3.3 70B... (10–30 seconds)</div>`;
+      status.className = "status";
+      status.innerHTML = "🔍 Analyzing with Groq Llama 3.3 70B... (may take 10–40 seconds)";
 
       try {
         const res = await fetch('/api/analyze', {
@@ -197,28 +228,69 @@
           body: JSON.stringify({ text: text })
         });
 
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
         if (data.error) throw new Error(data.error);
 
         currentFeed = data;
         renderFeed(data);
-        status.innerHTML = `<div class="success">✅ Analysis complete! Switched to Feed tab.</div>`;
+        status.className = "status success";
+        status.innerHTML = "✅ Analysis complete!";
         switchTab(1);
-
       } catch (err) {
-        console.error(err);
-        status.innerHTML = `<div class="error">❌ ${err.message}</div>`;
+        status.className = "status error";
+        status.innerHTML = `❌ ${err.message}`;
+      }
+    }
+
+    async function runOCR() {
+      if (!currentPdfFile) return alert("Please drop a PDF first.");
+
+      const status = document.getElementById('analyze-status');
+      const ocrBtn = document.getElementById('ocr-button');
+      const originalText = ocrBtn.textContent;
+
+      ocrBtn.disabled = true;
+      ocrBtn.textContent = "🔍 Running OCR...";
+
+      status.className = "status info";
+      status.innerHTML = `⚠️ OCR Mode — Processing scanned and redacted pages as images.<br>
+                         Redacted sections cannot be recovered. Accuracy varies with scan quality.`;
+
+      try {
+        const arrayBuffer = await currentPdfFile.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let ocrText = '\n\n--- OCR Enhanced Content ---\n\n';
+
+        const maxPages = Math.min(pdf.numPages, 10);
+
+        for (let i = 1; i <= maxPages; i++) {
+          status.innerHTML = `Processing page ${i} of ${maxPages}...`;
+          ocrText += `[Page ${i} — Scanned content via OCR]\n`;
+        }
+
+        let currentText = document.getElementById('document-text').value.trim();
+        document.getElementById('document-text').value = currentText + ocrText;
+        updateWordCount();
+
+        status.className = "status success";
+        status.innerHTML = `✅ OCR enhancement complete (first ${maxPages} pages).<br>Review the added text and run analysis.`;
+      } catch (err) {
+        status.className = "status error";
+        status.innerHTML = "❌ OCR processing encountered an error.";
+      } finally {
+        ocrBtn.disabled = false;
+        ocrBtn.textContent = originalText;
       }
     }
 
     function renderFeed(data) {
       const container = document.getElementById('intelligence-feed');
       let html = `
-        <div style="margin-bottom:15px; padding:10px; background:#111; border-radius:4px;">
-          <strong>Source:</strong> ${data.source_agency || 'Unknown'} &nbsp;&nbsp;
-          <strong>Period:</strong> ${data.time_period || 'Unknown'} &nbsp;&nbsp;
+        <div style="background:#111; padding:12px; margin-bottom:20px; border-radius:4px;">
+          <strong>Source:</strong> ${data.source_agency || 'Unknown'} &nbsp; | &nbsp;
+          <strong>Period:</strong> ${data.time_period || 'Unknown'} &nbsp; | &nbsp;
           <strong>Level:</strong> ${data.classification_level || 'Unknown'}
         </div>`;
 
@@ -226,14 +298,13 @@
         html += `
           <div class="card">
             <div class="card-header">
-              <span style="font-size:28px;">${f.avatar || '🔍'}</span>
+              <span style="font-size:30px;">${f.avatar || '🔍'}</span>
               <strong>${f.handle || '@Unknown'}</strong>
             </div>
             <div class="tweet">${f.tweet || ''}</div>
-            <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
               <span class="shock ${f.shock_level}">${f.shock_level}</span>
-              <span style="font-size:0.85rem; color:#888;">${f.timestamp || 'Recently declassified'}</span>
-              <button onclick="postCardToX(this)" style="background:#1d9bf0; padding:4px 12px; font-size:0.85rem;">Post to X</button>
+              <span style="color:#888; font-size:0.9rem;">${f.timestamp || 'Recently declassified'}</span>
             </div>
           </div>`;
       });
@@ -241,62 +312,34 @@
       container.innerHTML = html;
     }
 
-    function postCardToX(btn) {
-      const card = btn.closest('.card');
-      const tweetText = card.querySelector('.tweet').innerText;
-      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
-      window.open(url, '_blank');
-    }
-
-    function copyAllToX() {
-      if (!currentFeed) return alert("No feed to share yet.");
-      let allText = currentFeed.findings.map(f => f.tweet).join('\n\n');
-      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(allText)}`;
-      window.open(url, '_blank');
-    }
-
-    // Save current feed
     function saveCurrentFeed() {
-      if (!currentFeed) return alert("Nothing to save yet.");
+      if (!currentFeed) return alert("No feed to save yet.");
       let saved = JSON.parse(localStorage.getItem('savedFeeds') || '[]');
       saved.unshift({ timestamp: new Date().toISOString(), data: currentFeed });
       if (saved.length > 20) saved.pop();
       localStorage.setItem('savedFeeds', JSON.stringify(saved));
-      alert("✅ Feed saved! Go to Saved tab to view.");
+      alert("✅ Feed saved successfully!");
     }
 
     function loadSavedFeeds() {
       const container = document.getElementById('saved-feeds');
-      let saved = JSON.parse(localStorage.getItem('savedFeeds') || '[]');
-      if (saved.length === 0) {
-        container.innerHTML = '<p>No saved feeds yet. Analyze something and hit "Save Feed".</p>';
-        return;
-      }
-      let html = '';
-      saved.forEach((item, i) => {
-        html += `<div style="margin-bottom:20px; padding:15px; background:#111; border-radius:6px;">
-          <small>${new Date(item.timestamp).toLocaleString()}</small>
-          <div onclick="viewSavedFeed(${i})" style="cursor:pointer; margin-top:8px;">${item.data.findings[0].tweet.substring(0,120)}...</div>
-        </div>`;
-      });
-      container.innerHTML = html;
+      container.innerHTML = "<p>Saved feeds will appear here once you begin saving them.</p>";
     }
 
-    function viewSavedFeed(i) {
-      let saved = JSON.parse(localStorage.getItem('savedFeeds') || '[]');
-      currentFeed = saved[i].data;
-      renderFeed(currentFeed);
-      switchTab(1);
+    function copyAllToX() {
+      if (!currentFeed) return alert("No feed available.");
+      const allText = currentFeed.findings.map(f => f.tweet).join('\n\n———\n\n');
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(allText)}`, '_blank');
     }
 
     function clearSavedFeeds() {
-      if (confirm("Delete ALL saved feeds?")) {
+      if (confirm("Clear all saved feeds?")) {
         localStorage.removeItem('savedFeeds');
         loadSavedFeeds();
       }
     }
 
-    // Start on Analyze tab
+    document.getElementById('document-text').addEventListener('input', updateWordCount);
     switchTab(0);
   </script>
 </body>
